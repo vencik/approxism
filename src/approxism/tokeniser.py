@@ -1,12 +1,28 @@
 from __future__ import annotations
 from typing import Set, ClassVar, Iterator
+from dataclasses import dataclass
 from string import whitespace, punctuation
 from unicodedata import category as unicode_category
 from sys import maxunicode
 import re
+from glob import glob
+from os.path import basename
 
-from nltkdata import load as nltk_load
+from nltk.data import load as nltk_load
 from nltk.tokenize.punkt import PunktSentenceTokenizer
+
+
+def punctuation_chars() -> Set[str]:
+    """
+    :return: Punctuation characters
+    """
+    chars = {
+        char for char_code in range(maxunicode + 1)
+        if unicode_category(char := chr(char_code))[0] == 'P'
+    }
+    chars.update(set(punctuation))
+    chars -= set("'’")
+    return chars
 
 
 class Tokeniser:
@@ -18,6 +34,11 @@ class Tokeniser:
     which are white spaces and punctuation characters (or character sequences).
     """
 
+    class Error(Exception):
+        """
+        Tokeniser error
+        """
+
     @dataclass
     class Token:
         """
@@ -28,39 +49,25 @@ class Tokeniser:
         end: int
         tag: string
 
-    @staticmethod
-    def _punct() -> Set[str]:
-        """
-        :return: Punctuation characters
-        """
-        chars = {
-            char for char_code in range(maxunicode + 1)
-            if unicode_category(char := chr(char_code))[0] == 'P'
-        }
-        chars.update(set(punctuation) - set("'"))
-        return chars
+    _punctuation = punctuation_chars()
+    _whitespaces = set(whitespace)
+    _split_chars = "".join(_punctuation) + "".join(_whitespaces)
+    _splitter = re.compile(rf"[^{re.escape(_split_chars)}]+")
 
-    @staticmethod
-    def _ws() -> Set[str]:
-        """
-        :return: White space characters
-        """
-        return set(whitespace)
-
-    _punctuation = Tokeniser._punct()
-    _whitespaces = Tokeniser._ws()
-    _split_chars = "".join(Tokeniser._punctuation) + "".join(Tokeniser._whitespaces)
-    _splitter = re.compile(rf"[^{Tokeniser._split_chars}]+")
-
+    # Tags
     word = "word"
-    whitespace = "WS"
-    punctuation = "punct"
+    ws = "WS"
+    punct = "punct"
+
+    data_dir = "./nltk_data"
+    punkt_data_dir = f"{data_dir}/punkt/PY3"
 
     def __init__(self, language: str = "english"):
         """
         :param language: Language
+        :param default: Default language to use if requested language is not available
         """
-        punkt_pickle = f"./punkt/PY3/{language}.pickle"
+        punkt_pickle = f"{Tokeniser.punkt_data_dir}/{language}.pickle"
         self._punkt = nltk_load(punkt_pickle)
 
     def sentences(self, text: str) -> Iterator[str]:
@@ -82,8 +89,8 @@ class Tokeniser:
         def split_tag(token: str) -> str:
             for char in token:
                 if char in Tokeniser._punctuation:
-                    return Tokeniser.punctuation
-            return Tokeniser.whitespace
+                    return Tokeniser.punct
+            return Tokeniser.ws
 
         offset = 0
         for match in re.finditer(Tokeniser._splitter, string):
@@ -94,10 +101,20 @@ class Tokeniser:
                 yield Tokeniser.Token(
                     token, begin=offset, end=begin, tag=split_tag(token))
 
-            yield TokeniserToken(match.group(), begin, end, tag=Tokenise.word)
+            yield Tokeniser.Token(match.group(), begin, end, tag=Tokeniser.word)
             offset = end
 
         if offset < len(string):  # trailing split token
             token = string[offset:]
             yield Tokeniser.Token(
                 token, begin=offset, end=len(string), tag=split_tag(token))
+
+    @staticmethod
+    def available() -> List[str]:
+        """
+        :return: List of available languages
+        """
+        return [
+            basename(pickle).split('.')[0]
+            for pickle in glob(f"{Tokeniser.punkt_data_dir}/*.pickle")
+        ]

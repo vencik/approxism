@@ -28,3 +28,9 @@ class Stopwords(set):
             basename(stopwords).split('.')[0]
             for stopwords in glob(f"{Stopwords.data_dir}/*.txt")
         ]
+
+
+class NoStopwords(set):
+    """
+    Empty set of stopwords
+    """

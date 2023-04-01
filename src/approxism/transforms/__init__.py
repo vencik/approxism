@@ -1,1 +1,1 @@
-from lowercase import Lowercase
+from .lowercase import Lowercase

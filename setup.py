@@ -13,6 +13,9 @@ with open(str(root_dir/"version.txt")) as version_fd:
         level, no = re.fullmatch(r'^\s*VERSION_([A-Z]+)\s+([0-9]+)\s*$', line).groups()
         version[level.lower()] = int(no)
 
+with open(str(root_dir/"requirements.txt")) as req_fd:
+    requirements = [package.strip() for package in req_fd]
+
 
 setup(name="approxism",
     version=f"{version['major']}.{version['minor']}.{version['patch']}",
@@ -26,6 +29,7 @@ setup(name="approxism",
     license_files=["LICENSE"],
     package_dir={"": "src"},
     packages=["approxism"],
+    install_requires=requirements,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

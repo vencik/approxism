@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Defaults
+install_req="yes"   # install requirements automatically
 enable_ut="yes"     # unit tests enabled
 build_tgz="no"      # build source package
 build_pkg="no"      # build package
@@ -12,6 +13,7 @@ Usage: $0 [OPTIONS] [-- buildchain parameters]
 
 OPTIONS:
     -h or --help                Print this usage help and exit
+    -r or --install-req         Install requirements (default: $install_req)
     -u or --enable-ut           Enable unit tests run (default: $enable_ut)
     -U or --disable-ut          Disable unit tests run
     -g or --build-tgz           Build source package
@@ -63,13 +65,13 @@ if test "$platform" = "Linux"; then
     args=$(
         getopt \
             -n "$0" \
-            -o huUgGpP \
-            --long help,enable-ut,disable-ut,build-tgx,no-tgz,build-pkg,no-pkg \
+            -o hruUgGpP \
+            --long help,install-req,enable-ut,disable-ut,build-tgx,no-tgz,build-pkg,no-pkg \
             -- "$@" \
         || (echo >&2; usage >&2; exit 1)
     )
 elif test "$platform" = "Darwin"; then
-    args=$(getopt huUgGpP "$@" || (echo >&2; usage >&2; exit 1))
+    args=$(getopt hruUgGpP "$@" || (echo >&2; usage >&2; exit 1))
 fi
 
 eval set -- "$args"
@@ -77,6 +79,10 @@ while true; do
     case "$1" in
         -h|--help)
             usage; exit 0
+            ;;
+
+        -r|--install-req)
+            install_req="yes"
             ;;
 
         -u|--enable-ut)
@@ -120,16 +126,26 @@ source_dir="$project_dir/src"
 # Report
 echo_colour yellow "Build platform: $platform"
 echo_colour yellow "Source directory: $source_dir"
+echo_colour yellow "Install requirements: $install_req"
 echo_colour yellow "Unit tests enabled: $enable_ut"
 echo_colour yellow "Python source package build: $build_python_tgz"
 echo_colour yellow "Python package build: $build_python_pkg"
 echo
 
 
+# Requirements installation
+if test "$install_req" = "yes"; then
+    echo; echo_colour cyan "Installing requirements..."
+    cd "$project_dir"
+    pip install -r requirements.txt
+fi
+
+
 # Unit testing
 if which pytest >/dev/null; then
     echo; echo_colour cyan "Running tests..."
     cd "$project_dir"
+    PYTHONPATH="$PYTHONPATH:$source_dir" \
     pytest --verbose --color=yes src/unit_test
 else
     echo; echo_colour red "WARNING: Skipping tests, pytest not found"

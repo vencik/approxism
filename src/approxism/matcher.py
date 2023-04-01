@@ -5,8 +5,8 @@ from dataclasses import dataclass
 
 from pysdcxx import Bigrams, SequenceMatcher
 
-from tokeniser import Tokeniser
-from stopwords import Stopwords, NoStopwords
+from .tokeniser import Tokeniser
+from .stopwords import Stopwords, NoStopwords
 
 
 class Matcher:
@@ -64,13 +64,13 @@ class Matcher:
             :param split_sentences: Do sentence splitting
             """
             self._matcher = matcher
-            self._sentences = List[TokenSequence] = []
+            self._sentences : List[Matcher.TokenSequence] = []
 
             sentences = self._matcher.sentences(text) if split_sentences else (text,)
 
             offset = 0
             for sentence in sentences:
-                token_seq = TokenSequence(tokens=[], matcher=SequenceMatcher())
+                token_seq = Matcher.TokenSequence(tokens=[], matcher=SequenceMatcher())
 
                 for token in self._matcher.tokenise(sentence):
                     token.begin += offset

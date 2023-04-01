@@ -1,7 +1,7 @@
 from typing import Iterator
 
-from aproxism.tokeniser import Tokeniser
-from aproxism.matcher import Matcher
+from approxism.tokeniser import Tokeniser
+from approxism.matcher import Matcher
 
 
 class Lowercase(Matcher.TokenTransform):
@@ -23,7 +23,7 @@ class Lowercase(Matcher.TokenTransform):
                             the word is kept as is)
         """
         self.min_len = min_len
-        self.no_caps = no_caps
+        self.except_caps = except_caps
 
     def transform(
         self,
@@ -40,7 +40,7 @@ class Lowercase(Matcher.TokenTransform):
                 if token.tag != Tokeniser.word: break  # don't lowercase non-words
 
                 if len(token.string) < self.min_len:  # short word
-                    if not self.no_caps: break  # keep as is
+                    if not self.except_caps: break  # keep as is
 
                     if token.string.upper() == token.string:
                         break  # all CAPS, keep as is

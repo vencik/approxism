@@ -56,11 +56,11 @@ Anyhow, with all the prerequisites installed, clone the project:
 $ git clone https://github.com/vencik/approxism.git
 ----
 
-Build the project, run UTs and build Python package:
+Build the project, run UTs and build packages:
 [source]
 ----
-$ cd libsdcxx
-$ ./build.sh -up
+$ cd approxism
+$ ./build.sh -ugp
 ----
 
 Note that the `build.sh` script has options; run `$ ./build.sh -h` to see them.

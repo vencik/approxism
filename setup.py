@@ -31,7 +31,7 @@ setup(name="approxism",
     packages=["approxism"],
     install_requires=requirements,
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Topic :: Text Processing",
         "License :: OSI Approved :: BSD License",

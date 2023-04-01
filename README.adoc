@@ -1,0 +1,175 @@
+Approximate String Matching Using Sørensen–Dice Coefficient Based String Similarity
+===================================================================================
+
+Approximate (aka "fuzzy") matching of sequences of tokens, implemented on top of
+the `libsdcxx` library.
+
+The matcher uses NLTK punkt sentence splitter.
+
+In order to speed up the matching (or for other purposes), one may use collection
+of stop words for almost 50 languages.
+As the intended use is typically named-entity recognition, stop words are probably
+safe to disregard.
+Note though, that stop words are *not* removed from the text altogether; the matches are
+just prevented from beginning or ending by a stop word.
+Matches may still contain them (and they do contribute to the matching score).
+
+Also, token lowercasing is provided (with option for keeping short acronyms
+in uppercase (in order to prevent matches with common short words).
+Injection of custom token transforms is supported.
+
+
+See http://github.com/vencik/libsdcxx
+
+
+Build and installation
+----------------------
+
+Python v3.7 or newer is supported.
+For the Python package build, you shall need `pip` and Python `distutils`
+and the `wheel` package.
+If you wish to run Python UTs (which is highly recommended), you shall also need `pytest`.
+
+E.g. on Debian-based (or similar, `apt` using) systems, the following should get you
+the required prerequisites unless you wish to use `pyenv`.
+
+[source]
+----
+# apt-get install git
+# apt-get install python3-pip python3-distutils  # unless you use pyenv
+$ pip install wheel pytest                       # ditto, better do that in pyenv sandbox
+----
+
+On Mac OS X, you'll need Xcode tools and Homebrew.
+Then, install the required prerequisites by
+[source]
+----
+$ brew install git
+----
+
+If you do wish to use `pyenv` to create and manage project sandbox (which is advisable),
+see short intro to that in the subsection below.
+
+Anyhow, with all the prerequisites installed, clone the project:
+[source]
+----
+$ git clone https://github.com/vencik/approxism.git
+----
+
+Build the project, run UTs and build Python package:
+[source]
+----
+$ cd libsdcxx
+$ ./build.sh -up
+----
+
+Note that the `build.sh` script has options; run `$ ./build.sh -h` to see them.
+
+If you wish, use `pip` to install the Python package:
+[source]
+----
+# pip install approxism-*.whl
+----
+
+Note that it's recommended to use `pyenv`, especially for development purposes.
+
+
+Managing project sandbox with `pyenv`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+First install `pyenv`.
+You may use either your OS package repo (Homebrew on Mac OS X) or web `pyenv` installer.
+Setup `pyenv` (set environment variables) as instructed.
+
+Then, create `approxism` project sandbox, thus:
+[source]
+----
+$ pyenv install 3.9.6  # your choice of the Python interpreter version, >= 3.7
+$ pyenv virtualenv 3.9.6 approxism
+----
+
+Now, you can always (de)activate the virtual environment (switch to the sandbox) by
+[source]
+----
+# pyenv activate approxism
+# pyenv deactivate
+----
+
+In the sandbox, install Python packages using `pip` as usual.
+
+[source]
+----
+$ pip install wheel pytest
+----
+
+
+Usage
+-----
+
+[source, Python]
+----
+from approxism import Matcher
+
+matcher = Matcher("english")    # that's the default
+
+for match in matcher.text("Hello world!").match("worl", 0.8):  # score >= 0.8 is required
+    print(match)
+
+# Of course, one may like to store the (pre-processed) text and/or patterns:
+
+txt1 = matcher.text("My text about Sørensen–Dice coefficient.")     # text preprocessing
+txt2 = matcher.text("And one about correlation coefficient.")
+bgr1 = matcher.sequence_bigrams("Sørensen–Dice")                    # pattern preproc.
+bgr2 = matcher.sequence_bigrams("coefficient")
+
+for text in (txt1, txt2):
+    print(f"Searching in \"{text}\"")
+    for bgr in (bgr1, bgr2):
+        for match in text.match(bgr):                               # pattern matching
+            print(f"Found {bgr}: {match}")
+
+# Long texts preprocessing produces relatively large data structures
+# (space complexity is O(n^2) where n is number of tokens in a sentence).
+# Matcher.text splits the text into sentences.
+# However, if you already have the text split, or you prefer to process it
+# sentence-by-sentence (which is recommended), you may use Matcher.sentences to split it
+# and pre-process them using Matcher.sentence for matching:
+
+for sentence in matcher.sentences(my_long_text):    # sentence string generator
+    sentence = matcher.sentence(sentence)           # sentence preprocessing
+    for bgr in (bgr1, bgr2):
+        for match in sentence.match(bgr):           # pattern matching
+            print(f"Found {bgr}: {match}")
+
+# Should you like to lowercase tokens, simply pass the matcher token transform(s)
+
+from approxism.transforms import Lowercase
+
+matcher = Matcher(
+    language="french",
+    strip_stopwords=False,          # the default is True
+    token_transform=[Lowercase()],  # lowercase tokens
+)
+
+# The lowercase transformer supports keeping short acronyms in uppercase:
+
+Lowercase(min_len=4, except_caps=True)  # this will lowercase tokens of at least 4 chars,
+                                        # but will also lowercase shorter ones UNLESS
+                                        # they are in all CAPS so e.g. "AMI" (AWS machine
+                                        # image) shall be kept as is and therefore won't
+                                        # get mistaken for a friend...
+
+# You may add more transforms of yours; just implement Matcher.TokenTransform interface
+----
+
+
+License
+-------
+
+The software is available open-source under the terms of 3-clause BSD license.
+
+
+Author
+------
+
+Václav Krpec  <vencik@razdva.cz>

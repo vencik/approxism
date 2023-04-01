@@ -1,0 +1,6 @@
+__pycache__
+MANIFEST
+README.md
+*.tar.gz
+*.whl
+*.egg-info

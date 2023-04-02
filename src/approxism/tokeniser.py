@@ -65,12 +65,12 @@ class Tokeniser:
         string: str
         begin: int
         end: int
-        tag: string
+        tag: str
 
     _punctuation = punctuation_chars()
     _whitespaces = set(whitespace)
     _split_chars = "".join(_punctuation) + "".join(_whitespaces)
-    _splitter = re.compile(rf"[^{re.escape(_split_chars)}]+")
+    _word_re = re.compile(rf"[^{re.escape(_split_chars)}]+")
 
     # Tags
     word = "word"
@@ -125,7 +125,7 @@ class Tokeniser:
             return Tokeniser.ws
 
         offset = 0
-        for match in re.finditer(Tokeniser._splitter, string):
+        for match in re.finditer(Tokeniser._word_re, string):
             begin, end = match.span()
 
             if offset < begin:   # split token

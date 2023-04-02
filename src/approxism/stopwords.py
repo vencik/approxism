@@ -13,7 +13,6 @@ class Stopwords(set):
     def __init__(self, language: str = "english"):
         """
         :param language: Language
-        :param lang_dir
         """
         stopwords_txt = f"{Stopwords.data_dir}/{language}.txt"
         with open(stopwords_txt, "r", encoding="utf-8") as stopwords_fd:

@@ -124,19 +124,29 @@ class Matcher:
                 if best_match:  # produce last best match
                     yield make_match(best_match)
 
+    default_language = "english"
+
     def __init__(
         self,
-        language: str = "english",
+        language: str = default_language,
+        strict_language: bool = True,
         strip_stopwords: bool = True,
         token_transform: Optional[List[Matcher.TokenTransform]] = None,
     ):
         """
         :param language: Language (for tokenisation)
+        :param strict_language: Throw if language unavailable (otherwise use fallbacks)
         :param strip_stopwords: Matches are NOT allowed to begin/end by a stop word
         :param token_transform: Token sequence transform
         """
-        self._tokeniser = Tokeniser(language)
-        self._stopwords = Stopwords(language) if strip_stopwords else NoStopwords()
+        self._tokeniser = Tokeniser(
+            language if strict_language or language in Tokeniser.available() \
+            else Matcher.default_language)
+
+        self._stopwords = (
+            Stopwords(language) if strict_language or language in Stopwords.available() \
+            else NoStopwords()) if strip_stopwords else NoStopwords()
+
         self._transform = token_transform or []
 
     def text(self, string: str) -> Matcher.Text:

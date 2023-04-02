@@ -1,3 +1,5 @@
+import pytest
+
 from approxism import Matcher
 from approxism.transforms import Lowercase
 
@@ -72,7 +74,7 @@ def test_acronym_support():
     ]
 
     matcher = Matcher("french", token_transform=[Lowercase(min_len=4, except_caps=True)])
-    assert list(matcher.sentence(txt).match(pattern, 0.7)) == []  # match no more :-)
+    assert list(matcher.sentence(txt).match(pattern, 0.7)) == []  # matches no more :-)
 
 
 def test_stopwords():
@@ -89,3 +91,10 @@ def test_stopwords():
     assert list(Matcher(strip_stopwords=True).sentence(txt).match(pattern, 0.8)) == [
         Matcher.Match(25, 33, 2*7/(7+10)),  # forced to drop the "is", that's better :-)
     ]
+
+
+def test_strict_language():
+    with pytest.raises(LookupError):  # alas, Martian isn't supported so far...
+        Matcher("martian")
+
+    assert Matcher("martian", strict_language=False)  # a fallback will do (Neptunian?)

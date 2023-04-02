@@ -1,5 +1,5 @@
 from typing import List
-from os.path import basename, dirname, realpath
+from pathlib import Path
 from glob import glob
 
 
@@ -8,7 +8,7 @@ class Stopwords(set):
     Stopwords set
     """
 
-    data_dir = f"{dirname(realpath(__file__))}/stopwords"
+    data_dir = f"{Path(__file__).parent}/stopwords"
 
     def __init__(self, language: str = "english"):
         """
@@ -25,7 +25,7 @@ class Stopwords(set):
         :return: List of available languages
         """
         return [
-            basename(stopwords).split('.')[0]
+            Path(stopwords).stem
             for stopwords in glob(f"{Stopwords.data_dir}/*.txt")
         ]
 

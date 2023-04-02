@@ -6,10 +6,13 @@ from unicodedata import category as unicode_category
 from sys import maxunicode
 import re
 from glob import glob
-from os.path import basename
+from pathlib import Path
+from os import environ
 
 from nltk.data import load as nltk_load
+from nltk import download as nltk_download
 from nltk.tokenize.punkt import PunktSentenceTokenizer
+from filelock import FileLock
 
 
 def punctuation_chars() -> Set[str]:
@@ -32,12 +35,27 @@ class Tokeniser:
     The tokeniser uses NLTK punkt to split text into sentences.
     Sentences are tokenised by splitting text by split characters,
     which are white spaces and punctuation characters (or character sequences).
-    """
 
-    class Error(Exception):
-        """
-        Tokeniser error
-        """
+    Unfortunately, many NLTK models (including punkt tokenisers) are't explicit about
+    copyright statement and/or license (see https://www.nltk.org/nltk_data/).
+    Hence, re-packaging the models could easily be a breach of copyright law.
+    Therefore, download of the models is left to the user; I don't dare include them
+    in the distribution.
+    You have been warned...
+
+    You may either download them manually; in that case, set the path to the top-level
+    NLTK data directory (containing `tokenizers/punkt/PY3/*.pickle`) in `NLTK_DATA`
+    environment variable.
+    You may also only set that variable without downloading the data; if the models
+    don't exist yet, the tokeniser will download them on-demand.
+
+    If the `NLTK_DATA` environment variable isn't set, the tokeniser shall use
+    `/var/tmp/approxism/nltk_data` default.
+
+    NOTE: During download, the NLTK data directory is locked (using an advisory
+    file lock).
+    Therefore, even parallel usage of the library should be safe and correct.
+    """
 
     @dataclass
     class Token:
@@ -59,16 +77,30 @@ class Tokeniser:
     ws = "WS"
     punct = "punct"
 
-    data_dir = "./nltk_data"
-    punkt_data_dir = f"{data_dir}/punkt/PY3"
+    nltk_data_dir = environ.get("NLTK_DATA", "/var/tmp/approxism/nltk_data")
+    punkt_data_dir = f"{nltk_data_dir}/tokenizers/punkt/PY3"
+
+    @staticmethod
+    def assert_punkt_models():
+        """
+        Make sure NLTK.punkt models are available
+        """
+        Path(Tokeniser.nltk_data_dir).mkdir(parents=True, exist_ok=True)
+        punkt_data_dir = Path(Tokeniser.punkt_data_dir)
+
+        with FileLock(f"{Tokeniser.nltk_data_dir}/.lock"):
+            if not punkt_data_dir.is_dir():  # download NLTK.punkt
+                nltk_download("punkt", download_dir=Tokeniser.nltk_data_dir)
+
+        assert punkt_data_dir.is_dir()
 
     def __init__(self, language: str = "english"):
         """
         :param language: Language
         :param default: Default language to use if requested language is not available
         """
-        punkt_pickle = f"{Tokeniser.punkt_data_dir}/{language}.pickle"
-        self._punkt = nltk_load(punkt_pickle)
+        Tokeniser.assert_punkt_models()
+        self._punkt = nltk_load(f"{Tokeniser.punkt_data_dir}/{language}.pickle")
 
     def sentences(self, text: str) -> Iterator[str]:
         """
@@ -114,7 +146,8 @@ class Tokeniser:
         """
         :return: List of available languages
         """
+        Tokeniser.assert_punkt_models()
         return [
-            basename(pickle).split('.')[0]
+            Path(pickle).stem
             for pickle in glob(f"{Tokeniser.punkt_data_dir}/*.pickle")
         ]

@@ -160,6 +160,25 @@ Lowercase(min_len=4, except_caps=True)  # this will lowercase tokens of at least
                                         # get mistaken for a friend...
 
 # You may add more transforms of yours; just implement Matcher.TokenTransform interface
+
+# Lastly, when specifying language, note that not all languages may be available.
+# List of available tokeniser langauges is obtained by calling
+from approxism import Tokeniser
+Tokeniser.available()
+
+# Similarly, list of available stop words languages is obtained by calling
+from approxism import Stopwords
+Stopwords.available()
+
+# The matcher allows you to specify how to proceed if your language is not available.
+# By default, an exception is thrown.
+# However, passing strict_language=False parameter suppresses it, using default language
+# for tokenisation (and no stopwords, if they are not available).
+Matcher(language="martian", strict_language=False)
+
+# The above shan't throw; instead, Matcher.default_language shall be used
+# for tokenisation (and no stopwords whall be used, unless somebody collects Martian
+# stop words any time soon... ;-))
 ----
 
 

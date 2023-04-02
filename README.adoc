@@ -142,7 +142,6 @@ for sentence in matcher.sentences(my_long_text):    # sentence string generator
             print(f"Found {bgr}: {match}")
 
 # Should you like to lowercase tokens, simply pass the matcher token transform(s)
-
 from approxism.transforms import Lowercase
 
 matcher = Matcher(
@@ -180,6 +179,9 @@ Matcher(language="martian", strict_language=False)
 # for tokenisation (and no stopwords whall be used, unless somebody collects Martian
 # stop words any time soon... ;-))
 ----
+
+For more precise/interesting examples of use, check out the matcher unit tests in
+`src/approxism/unit_test/test_matcher.py`.
 
 
 License

@@ -28,7 +28,11 @@ setup(name="approxism",
     long_description_content_type="text/markdown",
     license_files=["LICENSE"],
     package_dir={"": "src"},
-    packages=["approxism"],
+    include_package_data=True,
+    packages=[
+        "approxism",
+        "approxism.transforms",
+    ],
     install_requires=requirements,
     classifiers=[
         "Development Status :: 3 - Alpha",

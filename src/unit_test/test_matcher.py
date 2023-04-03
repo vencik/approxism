@@ -22,9 +22,9 @@ def test_default():
     bgr = matcher.sequence_bigrams("test sentnece")  # 'cause I can't type properly...
 
     assert list(text.match(bgr, 0.65)) == [
-        Matcher.Match( 6, 19, 2*8/(11+11)),     # 3 bigrams lost: te en nc
-        Matcher.Match(29, 42, 2*8/(11+11)),     # ditto
-        Matcher.Match(55, 69, 2*8/(12+11)),     # 4 bigrams lost: te en nc es
+        Matcher.Match( 6, 19, 2*7/(10+10)),     # 3 bigrams lost: te en nc
+        Matcher.Match(29, 42, 2*7/(10+10)),     # ditto
+        Matcher.Match(55, 69, 2*7/(10+11)),     # 4 bigrams lost: te en nc es
     ]
 
 
@@ -36,7 +36,7 @@ def test_lowercase():
     name1 = "šíma, jiří"
     name2 = "neruda, roman"
 
-    matcher = Matcher("czech")
+    matcher = Matcher("czech", omit_whitespaces=False)
     text = matcher.sentence(txt)
     bgr1 = matcher.sequence_bigrams(name1)
     bgr2 = matcher.sequence_bigrams(name2)
@@ -54,10 +54,10 @@ def test_lowercase():
     bgr2 = matcher.sequence_bigrams(name2)
 
     assert list(text.match(bgr1, 0.85)) == [
-        Matcher.Match(50, 59, 2*6/(7+7)),       # 1 bigram lost only: '  '
+        Matcher.Match(50, 59, 2*6/(7+6)),       # only lost the comma bigram
     ]
     assert list(text.match(bgr2, 0.85)) == [
-        Matcher.Match(62, 74, 2*9/(10+10)),     # ditto
+        Matcher.Match(62, 74, 2*9/(10+9)),      # ditto
     ]
 
 
@@ -70,11 +70,11 @@ def test_acronym_support():
 
     matcher = Matcher("french", token_transform=[Lowercase()])
     assert list(matcher.sentence(txt).match(pattern, 0.85)) == [
-        Matcher.Match(10, 22, 2*8/(8+10)),  # AMI == AWS Machine Image, not a friend :-(
+        Matcher.Match(10, 22, 2*7/(7+9)),  # AMI == AWS Machine Image, not a friend :-(
     ]
 
     matcher = Matcher("french", token_transform=[Lowercase(min_len=4, except_caps=True)])
-    assert list(matcher.sentence(txt).match(pattern, 0.7)) == []  # matches no more :-)
+    assert list(matcher.sentence(txt).match(pattern, 0.75)) == []  # matches no more :-)
 
 
 def test_stopwords():
@@ -84,12 +84,14 @@ def test_stopwords():
 
     pattern = "dominant man"
 
-    assert list(Matcher(strip_stopwords=False).sentence(txt).match(pattern, 0.8)) == [
-        Matcher.Match(22, 33, 2*8/(9+10)),  # maximises match by adding "is" (gains '  ')
+    matcher = Matcher(strip_stopwords=False, omit_whitespaces=False)
+    assert list(matcher.sentence(txt).match(pattern, 0.8)) == [
+        Matcher.Match(22, 33, 2*8/(10+9)),  # maximises match by adding "is" (gains '  ')
     ]
 
-    assert list(Matcher(strip_stopwords=True).sentence(txt).match(pattern, 0.8)) == [
-        Matcher.Match(25, 33, 2*7/(7+10)),  # forced to drop the "is", that's better :-)
+    matcher = Matcher(strip_stopwords=True)
+    assert list(matcher.sentence(txt).match(pattern, 0.8)) == [
+        Matcher.Match(25, 33, 2*7/(9+7)),  # forced to drop the "is", that's better :-)
     ]
 
 

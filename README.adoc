@@ -4,7 +4,11 @@ Approximate String Matching Using Sørensen–Dice Coefficient Based String Simi
 Approximate (aka "fuzzy") matching of sequences of tokens, implemented on top of
 the `libsdcxx` library.
 
-The matcher uses NLTK punkt sentence splitter.
+The library offers more high-level (or user-friendly) interfaces for `libsdcxx` use:
+. `approxism.Extractor` as the high-level, dictionary-based information extractor and
+. `approxism.Matcher` as the middle-ground, common approximate string matcher.
+
+The project uses NLTK punkt sentence splitter.
 
 In order to speed up the matching (or for other purposes), one may use collection
 of stop words for almost 50 languages.
@@ -17,7 +21,6 @@ Matches may still contain them (and they do contribute to the matching score).
 Also, token lowercasing is provided (with option for keeping short acronyms
 in uppercase (in order to prevent matches with common short words).
 Injection of custom token transforms is supported.
-
 
 See http://github.com/vencik/libsdcxx
 
@@ -105,6 +108,60 @@ $ pip install wheel pytest
 
 Usage
 -----
+
+High-level, NER-like extractor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A very simple use-case, assuming that you have collected interesting terms
+you need to search for in your texts in a JSON file with the following structure:
+
+.`my_dictionary.json`
+[source, JSON]
+----
+{
+    "multi-word term" : {
+        "_matching_threshold" : 0.8,
+        "whatever" : "other fields you wish",
+        "etc" : "really, whatever you like"
+    },
+    "another term..." : {
+    }
+}
+----
+
+The `_matching_threshold` field is optional, see `approxism.Extractor.Dictionary.Record`.
+
+[source, Python]
+----
+from dataclasses import dataclass
+import json
+from approxism import Extractor
+from approxism.transforms import Lowercase
+
+@dataclass
+class MyRecord(Extractor.Dictionary.Record):
+    whatever: str   # or whatever type you wish, as long as it's JSON (de)serialisable
+    etc: str        # ditto
+
+with open("my_dictionary.json", "r", encoding="utf-8") as json_fd:
+    dictionary = {
+        term: MyRecord(**record)
+        for term, record in json.load(json_fd).items()
+    }
+
+extractor = Extractor(
+    dictionary,
+    default_threshold=0.8,
+    language="english",
+    token_transform=[Lowercase(min_len=4, except_caps=True)],
+)
+
+for match in extractor.extract(my_text):
+    print(match)
+----
+
+Approximate string matching (generic) layer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [source, Python]
 ----

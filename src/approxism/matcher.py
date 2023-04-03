@@ -131,12 +131,14 @@ class Matcher:
         language: str = default_language,
         strict_language: bool = True,
         strip_stopwords: bool = True,
+        omit_whitespaces: bool = True,
         token_transform: Optional[List[Matcher.TokenTransform]] = None,
     ):
         """
         :param language: Language (for tokenisation)
         :param strict_language: Throw if language unavailable (otherwise use fallbacks)
         :param strip_stopwords: Matches are NOT allowed to begin/end by a stop word
+        :param omit_whitespaces: Whitespaces don't contribute to bigram multi-sets
         :param token_transform: Token sequence transform
         """
         self._tokeniser = Tokeniser(
@@ -147,6 +149,7 @@ class Matcher:
             Stopwords(language) if strict_language or language in Stopwords.available() \
             else NoStopwords()) if strip_stopwords else NoStopwords()
 
+        self._omit_whitespaces = omit_whitespaces
         self._transform = token_transform or []
 
     def text(self, string: str) -> Matcher.Text:
@@ -192,9 +195,13 @@ class Matcher:
         :param token: Token
         :return: Token bigrams
         """
+        if token.tag == Tokeniser.ws and self._omit_whitespaces:
+            return Bigrams()
+
         token_string = token.string
         if len(token_string) == 1:  # don't drop single char tokens
             token_string = f"{token_string} "
+
         return Bigrams(token_string)
 
     def sequence_bigrams(self, string: str) -> Bigrams:

@@ -120,7 +120,6 @@ you need to search for in your texts in a JSON file with the following structure
 ----
 {
     "multi-word term" : {
-        "_matching_threshold" : 0.8,
         "whatever" : "other fields you wish",
         "etc" : "really, whatever you like"
     },

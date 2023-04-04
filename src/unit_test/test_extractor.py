@@ -9,6 +9,7 @@ from approxism.transforms import Lowercase
 
 @dataclass
 class Person(Extractor.Dictionary.Record):
+    sex: str
     birth: Optional[str] = None
     nationality: Optional[str] = None
     death: Optional[str] = None
@@ -16,49 +17,63 @@ class Person(Extractor.Dictionary.Record):
 
 dictionary = {
     "Barrie, Chris" : Person(
+        sex="male",
         birth="28 March 1960",
         nationality="British",
     ),
     "Rimmer, Arnold" : Person(
+        sex="male",
         fictional=True,
     ),
     "Charles, Craig" : Person(
+        sex="male",
         birth="11 July 1964",
     ),
     "Lister, David" : Person(
-        _matching_threshold=0.75,  # called Dave, let's lower the score threshold a bit
+        sex="male",
         birth="unknown",
         fictional=True,
     ),
     "John-Jules, Danny" : Person(
+        sex="male",
         birth="16 September 1960",
     ),
     "Cat" : Person(
+        sex="with anything",
         fictional=True,
         death="9 to go"
     ),
     "Llewellyn, Robert" : Person(
+        sex="male",
         birth="10 March 1956",
     ),
     "Kryten" : Person(
+        sex="made one for himself, but it escaped",
         birth="none, manufactured",
         fictional=True,
         nationality="N/A",
     ),
     "Lovett, Norman" : Person(
+        sex="male",
         birth="31 October 1946",
         nationality="British",
     ),
     "Holly" : Person(
+        sex="male (head only)",
         birth="none, manufactured",
         fictional=True,
     ),
     "Grant, Rob" : Person(
+        sex="male",
     ),
     "Naylor, Doug" : Person(
+        sex="male",
         birth="31 December 1955",
     ),
 }
+
+# Lister is often called Dave; let's lower the score threshold a bit
+dictionary["Lister, David"]._matching_threshold=0.75
 
 text = """
 Red Dwarf is a British science fiction comedy franchise created by Rob Grant and Doug Naylor, which primarily consists of a television sitcom that aired on BBC Two between 1988 and 1999, and on Dave since 2009, gaining a cult following.[1] The series follows low-ranking technician Dave Lister, who awakens after being in suspended animation for three million years to find that he is the last living human, and that he is alone on the mining spacecraft Red Dwarf—save for a hologram of his deceased bunkmate Arnold Rimmer and "Cat", a life form which evolved from Lister's pregnant cat.

@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import Iterator, Tuple, Any, Optional, Union, IO, Type
+from typing import Iterator, Tuple, Any, Optional, Union, IO, Type, Dict
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, is_dataclass
+from dataclasses import dataclass, is_dataclass, field
 import json
 from importlib import import_module
 from copy import copy
@@ -59,7 +59,7 @@ class Extractor:
             """
             Dictionary record (base class)
             """
-            _matching_threshold: Optional[float] = None
+            _matching_threshold: Optional[float] = field(default=None, init=False)
 
         @abstractmethod
         def items(self) -> Iterator[Tuple[str, Extractor.Dictionary.Record]]:
@@ -191,8 +191,18 @@ class Extractor:
         """
         def get_class(source: Any, class_name: str) -> Type:
             split = class_name.split('.', 1)
-            c1ass = getattr(source, split[0])
-            return c1ass if len(split) == 1 else get_class(c1ass, split[1])
+            cls = getattr(source, split[0])
+            return cls if len(split) == 1 else get_class(cls, split[1])
+
+        def instantiate(cls: Type[object], obj: Dict[str, Any]) -> object:
+            if not issubclass(cls, Extractor.Dictionary.Record):  # common class
+                return cls(**obj)
+
+            # Manage Record fields
+            threshold = obj.pop("_matching_threshold", None)
+            inst = cls(**obj)
+            inst._matching_threshold = threshold
+            return inst
 
         def reconstruct(obj: Any) -> Any:
             if isinstance(obj, dict):
@@ -200,7 +210,9 @@ class Extractor:
                 if class_name:  # the object supports deserialisation from data members
                     del obj["_class"]
                     module_name, class_name = class_name.split('::', 1)
-                    return get_class(import_module(module_name), class_name)(**obj)
+                    return instantiate(
+                        get_class(import_module(module_name), class_name),
+                        obj)
 
                 # Otherwise reconstruct dict values to depth
                 return {key: reconstruct(value) for key, value in obj.items()}

@@ -1,0 +1,10 @@
+`approxism` examples
+====================
+
+The simple example showed in the README file is implemented in `extract.py`.
+Install `approxism` and run it from the `examples` directory:
+
+[source, shell]
+----
+$ ./extract.py dictionary.json text.txt
+----

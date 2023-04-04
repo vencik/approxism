@@ -1,0 +1,10 @@
+{
+    "multi-word term" : {
+        "whatever" : "other fields you wish",
+        "etc" : "really, whatever you like"
+    },
+    "another term" : {
+        "whatever" : "I don't care",
+        "etc" : "..."
+    }
+}
